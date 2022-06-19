@@ -24,13 +24,14 @@ class TGUScraper(ScrapperSelenium):
         next_btn = self.fetch_element(By.ID, config.btn_next)
         list_of_buttons_str = paginate_buttons.text
         total_pages = self.total_pages(list_of_buttons_str)
-        self.db.create_table(config.table_name, config.table.create_command)
+        self.db.create_table(config.table_name, config.create_command)
         for i in range(total_pages):
             table = self.fetch_element(By.ID, price_list_id)
             table_str = table.text
             self.insert_page_to_db(table_str, config.table_name)
             self.driver.execute_script("arguments[0].click();", next_btn)
             time.sleep(2)
+
             next_btn = self.fetch_element(By.ID, config.btn_next)
 
     @staticmethod
@@ -43,4 +44,7 @@ class TGUScraper(ScrapperSelenium):
         tbl = tbl.split('\n')
         for line in tbl:
             if line[0] != '0':
-                self.db.insert_row(table, line.replace(' ', ','))
+                line = line.replace('/', '-')
+                line = line.replace(',', '.').split(' ')
+                row = f'{line[0]},{line[1]},{line[2]},{line[3]},\'{line[6]}\',\'{line[7]}\''
+                self.db.insert_row(table, row)

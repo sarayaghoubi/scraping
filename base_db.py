@@ -6,7 +6,7 @@ class DBHandler:
         """
 
         param db_name: it could be None if the connection has been initialized and is going to be passed
-                    ;otherwise it must be a string
+                    otherwise it must be a string
         :param connection: instance of psycopg2
 
         """
@@ -31,7 +31,7 @@ class DBHandler:
         :param name: name of the database
         :return:  if the process was successful return True, else False
         """
-        sql = f'CREATE database {name};'
+        sql = f'CREATE database {name}'
         return self.execute_command(sql)
 
     def create_table(self, name, columns):
@@ -50,25 +50,32 @@ class DBHandler:
 
     def insert_row(self, table, row):
         assert self.check_table_exists(table), 'table does not exist!! please create the able from create_table()'
-        command = f'''INSERT INTO {table} VALUES ({row})'''
+        command = f'''INSERT INTO {table} 
+        VALUES ({row})'''
         return self.execute_command(command)
 
     def check_table_exists(self, table_name):
         if table_name in self.tables:
             return True
-        command = f'SHOW TABLES LIKE \'{table_name}\';'
+        command = f'''
+        SELECT EXISTS (
+    SELECT FROM 
+        pg_tables
+    WHERE 
+        tablename  = '{table_name}'
+    )
+        '''
         try:
             cursor = self.conn.cursor()
             cursor.execute(command)
             result = cursor.fetchone()
-            if result:
+            if result[0]:
                 self.tables.append(table_name)
                 return True
             else:
                 return False
-            cursor.close()
-        except ValueError as e:
-            print(e)
+        except NameError:
+            print("could not check existence of the table")
 
     # there are no tables named "tableName"
 
@@ -83,8 +90,7 @@ class DBHandler:
             cursor.execute(command)
             cursor.close()
             return True
-        except ValueError as e:
-            print(e)
+        except:
             return False
 
     def del_row(self, row, ids, condition):

@@ -45,7 +45,7 @@ class ScrapperSelenium(metaclass=ABCMeta):
         while res is None:
             try:
                 res = self.driver.find_element(by, string)
-            except:
+            except NameError:
                 time.sleep(0.2)
                 print(' ... loading ... ')
         return res
